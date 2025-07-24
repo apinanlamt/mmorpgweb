@@ -7,7 +7,12 @@ const Player = require('./models/player');
 const { spawnMonster, monsters } = require('./monsterSystem');
 const chatHistory = [];
 
-mongoose.connect('mongodb://localhost:27017/mmorpg_web', { useNewUrlParser: true, useUnifiedTopology: true });
+// เชื่อมต่อ MongoDB
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mmorpg_web';
+mongoose.connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
 
 app.use(express.static(__dirname + '/public'));
 
@@ -18,7 +23,7 @@ io.on('connection', async (socket) => {
 
     let player = await Player.findOne({ socketId: socket.id });
     if (!player) {
-        player = new Player({ socketId: socket.id, x: 100, y: 100, hp: 100, inventory: [] });
+        player = new Player({ socketId: socket.id, x: 100, y: 100, hp: 100, inventory: [], quests: [] });
         await player.save();
     }
     players[socket.id] = player;
@@ -60,4 +65,6 @@ io.on('connection', async (socket) => {
 
 spawnMonster(io);
 
-http.listen(3000, () => console.log('Server running on http://localhost:3000'));
+http.listen(process.env.PORT || 3000, () => {
+    console.log('Server running on port', process.env.PORT || 3000);
+});
